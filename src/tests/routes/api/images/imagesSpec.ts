@@ -1,7 +1,13 @@
 import { app } from '../../../../index';
-import { imagesWithExtensions, imageProcessor, sendImage } from '../../../../routes/api/images/images';
+import path from 'path';
+import {
+  imageWithExtension,
+  sendImage,
+  resizeWithSharp,
+  checkFolderExistence,
+} from '../../../../routes/api/images/images';
 import supertest from 'supertest';
-import { NextFunction } from 'express-serve-static-core';
+import { Request, Response, NextFunction } from 'express';
 
 const request = supertest(app);
 
@@ -9,46 +15,117 @@ describe('Tests for /api/images', () => {
   describe('api/images endpoint response', () => {
     it('gets the api/images endpoint', async () => {
       const response = await request.get('/api/images');
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(400);
     });
     describe('Tests for /api/images query params', () => {
-      it('gets the /api/images?filename and should return a not valid query message', async () => {
-        const response = await request.get('/api/images?filename=asdf');
-        expect(response.text).toEqual('Please pass valid query parameters');
+      describe('Failure api cases', () => {
+        it('gets the /api/images?filename and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename and should return a message', async () => {
+          const response = await request.get('/api/images?filename');
+          expect(response.text).toEqual('Please pass the required query params!');
+        });
+        it('gets the /api/images?filename=asdf and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=asdf');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=asdf and should return 200 status', async () => {
+          const response = await request.get('/api/images?filename=asdf');
+          expect(response.text).toEqual('Please pass width or height params!');
+        });
+        it('gets the /api/images?filename=asdf&width=0 and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=0');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=asdf&width=0 and should return a message', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=0');
+          expect(response.text).toEqual('Enter valid values of width or height!');
+        });
+        it('gets the /api/images?filename=asdf&height=0 and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=asdf&height=0');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=asdf&height=0 and should return a message', async () => {
+          const response = await request.get('/api/images?filename=asdf&height=0');
+          expect(response.text).toEqual('Enter valid values of width or height!');
+        });
+        it('gets the /api/images?filename=asdf&height=0&width=0 and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=asdf&height=0&width=0');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=asdf&height=0&width=0 and should return a message', async () => {
+          const response = await request.get('/api/images?filename=asdf&height=0&width=0');
+          expect(response.text).toEqual('Enter valid values of width or height!');
+        });
+        it('gets the /api/images?filename=asdf&width=0&height=0 and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=0&height=0');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=asdf&width=0&height=0 and should return a message', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=0&height=0');
+          expect(response.text).toEqual('Enter valid values of width or height!');
+        });
+        it('gets the /api/images?filename=fjord&width=0&height=0 and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=fjord&width=0&height=0');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=fjord&width=0&height=0 and should return a message', async () => {
+          const response = await request.get('/api/images?filename=fjord&width=0&height=0');
+          expect(response.text).toEqual('Enter valid values of width or height!');
+        });
+        it('gets the /api/images?filename=asdf&width=100&height=0 and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=100&height=0');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=asdf&width=100&height=0 and should return a message', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=100&height=0');
+          expect(response.text).toEqual('Enter valid values of width or height!');
+        });
+        it('gets the /api/images?filename=asdf&width=0&height=100 and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=0&height=100');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=asdf&width=0&height=100 and should return a message', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=0&height=100');
+          expect(response.text).toEqual('Enter valid values of width or height!');
+        });
+        it('gets the /api/images?filename=asdf&width=100&height=100 and should return 400 status', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=100&height=100');
+          expect(response.statusCode).toEqual(400);
+        });
+        it('gets the /api/images?filename=asdf&width=100&height=100 and should return a message', async () => {
+          const response = await request.get('/api/images?filename=asdf&width=100&height=100');
+          expect(response.text).toEqual('The specified image "asdf" is not found!');
+        });
       });
-      it('gets the /api/images?filename and should return 200 status', async () => {
-        const response = await request.get('/api/images?filename=encenadaport');
-        expect(response.statusCode).toEqual(200);
-      });
-      describe('------ imagesWithExtensions() function tests ------', () => {
-        it('expects to return undefined', () => {
-          expect(imagesWithExtensions('something')).toBeUndefined;
+      describe('Success api cases', () => {
+        it('gets the /api/images?filename=fjord&width=100&height=100 and should return 200 status', async () => {
+          const response = await request.get('/api/images?filename=fjord&width=100&height=100');
+          expect(response.statusCode).toEqual(200);
         });
-        it('expects to return array of files with different extension', () => {
-          expect(imagesWithExtensions('encenadaport')).toEqual(['encenadaport.jpg', 'encenadaport.png']);
+        it('gets the /api/images?filename=fjord&height=300&width=100 and should return 200 status', async () => {
+          const response = await request.get('/api/images?filename=fjord&height=300&width=100');
+          expect(response.statusCode).toEqual(200);
         });
-      });
-      describe('------ ImageProcessor() function tests ------', () => {
-        it('expects Promise to be resolved with all arguments set', async () => {
-          await expectAsync(imageProcessor('fjord', 200, 300)).toBeResolved();
+        it('gets the /api/images?filename=fjord&width=100 and should return 200 status', async () => {
+          const response = await request.get('/api/images?filename=fjord&width=100');
+          expect(response.statusCode).toEqual(200);
         });
-        it('expects Promise to be resolved with height as null', async () => {
-          await expectAsync(imageProcessor('fasdf', 200, null)).toBeResolved();
-        });
-        it('expects Promise to be resolved with width as null', async () => {
-          await expectAsync(imageProcessor('fasdf', null, 200)).toBeResolved();
-        });
-        it('expects Promise to be rejected', async () => {
-          await expectAsync(imageProcessor('fasdf', null, null)).toBeRejected;
+        it('gets the /api/images?filename=fjord&height=300 and should return 200 status', async () => {
+          const response = await request.get('/api/images?filename=fjord&height=300');
+          expect(response.statusCode).toEqual(200);
         });
       });
-      describe('------ sendImage() function tests ------', () => {
-        it('expects to be resolved', async () => {
-          const imageProcessorResponse = imageProcessor('fjord', 200, 100);
-          const expResponse = app.response;
-          const nextFunc = app.request.next;
-          await expectAsync(sendImage(imageProcessorResponse, expResponse, nextFunc as NextFunction)).toBeResolved;
-        });
+    });
+    describe('------ function tests ------', () => {
+      const expResponse = app.response;
+      it('imageWithExtension() expects to return undefined', () => {
+        expect(imageWithExtension('something', expResponse)).toBeUndefined;
+      });
+      it('imageWithExtension() expects to return a filename with extension', () => {
+        expect(imageWithExtension('fjord', expResponse)).toEqual('fjord.jpg');
       });
     });
   });
